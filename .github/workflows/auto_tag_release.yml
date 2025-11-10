@@ -22,6 +22,17 @@ jobs:
       with:
         ref: main  # 明确检出main分支[5](@ref)
 
+    - name: Cache conda
+      uses: actions/cache@v4
+      env:
+        # Increase this value to reset cache if requirements.txt has not changed
+        CACHE_NUMBER: 0
+      with:
+        enableCrossOsArchive: true
+        path: D:\conda_pkgs_dir
+        key:
+          ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{hashFiles('requirements.txt') }}
+
     - name: Set up Miniconda
       uses: conda-incubator/setup-miniconda@v3
       with:
@@ -29,13 +40,15 @@ jobs:
         python-version: "3.10.14"
         auto-update-conda: true
         activate-environment: "baah"
+        use-only-tar-bz2: true # IMPORTANT: This needs to be set for caching to work properly!
+        pkgs-dirs: D:\conda_pkgs_dir
 
-    - name: Set pip cache
+    - name: Cache pip
       uses: actions/cache@v4
       if: startsWith(runner.os, 'Windows')
       with:
         path: ~\AppData\Local\pip\Cache
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
         restore-keys: |
           ${{ runner.os }}-pip-
 
